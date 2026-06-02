@@ -15,6 +15,18 @@ st.set_page_config(
 )
 
 st.title("Oxford University Maternity Pay Calculator")
+st.caption("Beta Version")
+
+st.info(
+    """
+    This calculator provides an estimate only.
+
+    Please confirm maternity leave and pay entitlements
+    with Oxford University HR and Payroll.
+
+    This tool is not an official University system.
+    """
+)
 
 annual_salary = st.number_input(
     "Annual Salary (£)",
@@ -163,3 +175,8 @@ if st.button("Calculate"):
     st.write(
         f"13 Weeks SMP: £{results['smp_total']:,.2f}"
     )
+    st.divider()
+
+    st.caption(
+    "Version 0.1 | Released June 2026"
+)
