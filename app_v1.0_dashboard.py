@@ -150,18 +150,15 @@ with st.expander("Employee Details", expanded=True):
     )
 
     employment_start_text = st.date_input(
-        "Employment Start Date (DD/MM/YYYY)",
-        value="01/09/2024"
+        "Employment Start Date",
     )
 
     due_date_text = st.date_input(
-        "Expected Due Date (DD/MM/YYYY)",
-        value="03/06/2026"
+        "Expected Due Date",
     )
 
     leave_start_text = st.date_input(
-        "Maternity Leave Start Date (DD/MM/YYYY)",
-        value="11/06/2026"
+        "Maternity Leave Start Date",
     )
 
     pdf_filename = st.text_input(
