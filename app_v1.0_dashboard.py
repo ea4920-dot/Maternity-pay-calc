@@ -213,7 +213,7 @@ def generate_pdf_report(
     content.append(
         Paragraph(
             f"Employment Start Date: "
-            f"{employment_start_date.strftime('%d %B %Y')}",
+            f"{employment_start_date}",
             styles["BodyText"]
         )
     )
@@ -221,7 +221,7 @@ def generate_pdf_report(
     content.append(
         Paragraph(
             f"Expected Due Date: "
-            f"{due_date.strftime('%d %B %Y')}",
+            f"{due_date}",
             styles["BodyText"]
         )
     )
@@ -229,7 +229,7 @@ def generate_pdf_report(
     content.append(
         Paragraph(
             f"Maternity Leave Start Date: "
-            f"{leave_start.strftime('%d %B %Y')}",
+            f"{leave_start}",
             styles["BodyText"]
         )
     )
@@ -237,7 +237,7 @@ def generate_pdf_report(
     content.append(
         Paragraph(
             f"Expected Return Date: "
-            f"{return_date.strftime('%d %B %Y')}",
+            f"{return_date}",
             styles["BodyText"]
         )
     )
@@ -353,30 +353,16 @@ def generate_pdf_report(
 
 if calculate:
 
-    try:
+    employment_start_date = employment_start_text
 
-        employment_start_date = datetime.strptime(
-            employment_start_text,
-            "%d/%m/%Y"
-        ).date()
+    due_date = due_date_text
 
-        due_date = datetime.strptime(
-            due_date_text,
-            "%d/%m/%Y"
-        ).date()
+    leave_start = leave_start_text
 
-        leave_start = datetime.strptime(
-            leave_start_text,
-            "%d/%m/%Y"
-        ).date()
-
-    except ValueError:
-
-        st.error(
-            "Please enter all dates using DD/MM/YYYY format."
-        )
-
-        st.stop()
+    results = calculate_pay_schedule(
+        annual_salary=annual_salary,
+        fte=fte
+    )
 
     results = calculate_pay_schedule(
         annual_salary=annual_salary,
