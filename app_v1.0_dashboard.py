@@ -148,25 +148,54 @@ with st.expander("Employee Details", expanded=True):
         value=1.0,
         step=0.1
     )
+    
+    annual_leave_entitlement = st.number_input(
+    "Full-Time Annual Leave Entitlement (Days)",
+    min_value=0.0,
+    value=38.0,
+    step=0.5
+)
 
-    employment_start_text = st.date_input(
+current_leave_balance = st.number_input(
+    "Current Leave Balance",
+    min_value=0.0,
+    value=0.0,
+    step=0.5
+)
+
+leave_unit = st.selectbox(
+    "Leave Balance Unit",
+    [
+        "Days",
+        "Hours"
+    ]
+)
+
+hours_per_day = st.number_input(
+    "Hours Per Day",
+    min_value=1.0,
+    value=7.4,
+    step=0.1
+)
+
+employment_start_text = st.date_input(
         "Employment Start Date",
     )
 
-    due_date_text = st.date_input(
+due_date_text = st.date_input(
         "Expected Due Date",
     )
 
-    leave_start_text = st.date_input(
+leave_start_text = st.date_input(
         "Maternity Leave Start Date",
     )
 
-    pdf_filename = st.text_input(
+pdf_filename = st.text_input(
     "Employee Name for PDF",
     value=""
 )
 
-    intends_to_return = st.checkbox(
+intends_to_return = st.checkbox(
         "I intend to return to work",
         value=True
     )
@@ -359,9 +388,29 @@ if calculate:
 
     leave_start = leave_start_text
 
-    results = calculate_pay_schedule(
-        annual_salary=annual_salary,
-        fte=fte
+    actual_entitlement = (
+        annual_leave_entitlement * fte
+    )
+
+    if leave_unit == "Hours":
+
+        current_balance_days = (
+            current_leave_balance / hours_per_day
+        )
+
+    else:
+
+        current_balance_days = (
+            current_leave_balance
+        )
+
+    accrued_during_leave = (
+        actual_entitlement
+    )
+
+    total_leave_days = (
+        current_balance_days +
+        accrued_during_leave
     )
 
     results = calculate_pay_schedule(
@@ -391,6 +440,47 @@ if calculate:
         due_date,
         intends_to_return
     )
+
+    results = calculate_pay_schedule(
+        annual_salary=annual_salary,
+        fte=fte
+    )
+
+    qualifying = calculate_qualifying_week(
+        due_date
+    )
+
+    return_date = calculate_return_date(
+        leave_start
+    )
+
+    timeline = calculate_maternity_timeline(
+        leave_start
+    )
+
+    smp_eligible = qualifies_for_smp(
+        employment_start_date,
+        due_date
+    )
+
+    oxford_eligible = qualifies_for_oxford_scheme(
+        employment_start_date,
+        due_date,
+        intends_to_return
+    )
+
+    pdf_data = generate_pdf_report(
+        employment_start_date,
+        due_date,
+        leave_start,
+        return_date,
+        results,
+        timeline,
+        qualifying,
+        oxford_eligible,
+        smp_eligible
+    )
+
     pdf_data = generate_pdf_report(
         employment_start_date,
         due_date,
@@ -405,7 +495,7 @@ if calculate:
 
     st.divider()
 
-    card1, card2, card3, card4 = st.columns(4)
+    card1, card2, card3, card4, card5 = st.columns(5)
 
     with card1:
 
@@ -444,7 +534,7 @@ if calculate:
                 st.success("SMP Eligible")
             else:
                 st.error("SMP Not Eligible")
-
+ 
     with card3:
 
         with st.container(border=True):
@@ -480,6 +570,33 @@ if calculate:
                     "%d %b %Y"
                 )
             )
+    
+    with card5:
+
+        with st.container(border=True):
+
+            st.subheader("🏖 Leave Summary")
+
+            st.write(
+                f"Current Balance: "
+                f"{current_leave_balance:,.1f} "
+                f"{leave_unit}"
+            )
+
+            st.write(
+                f"Annual Entitlement: "
+                f"{actual_entitlement:,.1f} days"
+            )
+
+            st.write(
+                f"Accrued During Leave: "
+                f"{accrued_during_leave:,.1f} days"
+            )
+
+            st.metric(
+                "Available On Return",
+                f"{total_leave_days:,.1f} days"
+            )
 
     st.divider()
 
@@ -509,12 +626,12 @@ if calculate:
 
     st.markdown(
     """
-🟩 Full Pay &nbsp;&nbsp;&nbsp;
-🟧 SMP &nbsp;&nbsp;&nbsp;
-🟥 Unpaid Leave
-""",
+    🟩 Full Pay &nbsp;&nbsp;&nbsp;
+    🟧 SMP &nbsp;&nbsp;&nbsp;
+    🟥 Unpaid Leave
+    """,
     unsafe_allow_html=True
-)
+    )
 
     start_year = leave_start.year
     start_month = leave_start.month
