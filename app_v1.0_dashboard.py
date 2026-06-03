@@ -2,6 +2,16 @@ import streamlit as st
 from datetime import datetime
 import calendar
 
+from io import BytesIO
+
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer
+)
+
+from reportlab.lib.styles import getSampleStyleSheet
+
 def render_month(
     year,
     month,
@@ -165,6 +175,180 @@ calculate = st.button(
     use_container_width=True
 )
 
+def generate_pdf_report(
+    employment_start_date,
+    due_date,
+    leave_start,
+    return_date,
+    results,
+    timeline,
+    qualifying,
+    oxford_eligible,
+    smp_eligible
+):
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer
+    )
+
+    styles = getSampleStyleSheet()
+
+    content = []
+
+    content.append(
+        Paragraph(
+            "Oxford University Maternity Pay Report",
+            styles["Title"]
+        )
+    )
+
+    content.append(
+        Spacer(1, 12)
+    )
+
+    content.append(
+        Paragraph(
+            f"Employment Start Date: "
+            f"{employment_start_date.strftime('%d %B %Y')}",
+            styles["BodyText"]
+        )
+    )
+
+    content.append(
+        Paragraph(
+            f"Expected Due Date: "
+            f"{due_date.strftime('%d %B %Y')}",
+            styles["BodyText"]
+        )
+    )
+
+    content.append(
+        Paragraph(
+            f"Maternity Leave Start Date: "
+            f"{leave_start.strftime('%d %B %Y')}",
+            styles["BodyText"]
+        )
+    )
+
+    content.append(
+        Paragraph(
+            f"Expected Return Date: "
+            f"{return_date.strftime('%d %B %Y')}",
+            styles["BodyText"]
+        )
+    )
+
+    content.append(
+        Spacer(1, 12)
+    )
+
+    content.append(
+        Paragraph(
+            f"Oxford Enhanced Scheme: "
+            f"{'Eligible' if oxford_eligible else 'Not Eligible'}",
+            styles["BodyText"]
+        )
+    )
+
+    content.append(
+        Paragraph(
+            f"SMP Eligibility: "
+            f"{'Eligible' if smp_eligible else 'Not Eligible'}",
+            styles["BodyText"]
+        )
+    )
+
+    content.append(
+        Spacer(1, 12)
+    )
+
+    content.append(
+        Paragraph(
+            f"Weekly Salary: "
+            f"£{results['weekly_salary']:,.2f}",
+            styles["BodyText"]
+        )
+    )
+
+    content.append(
+        Paragraph(
+            f"Estimated Total Pay: "
+            f"£{results['total_pay']:,.2f}",
+            styles["BodyText"]
+        )
+    )
+
+    content.append(
+        Spacer(1, 12)
+    )
+
+    content.append(
+        Paragraph(
+            "Leave Periods",
+            styles["Heading2"]
+        )
+    )
+
+    content.append(
+        Paragraph(
+            f"Full Pay: "
+            f"{timeline['full_pay_start'].strftime('%d %b %Y')} "
+            f"to "
+            f"{timeline['full_pay_end'].strftime('%d %b %Y')}",
+            styles["BodyText"]
+        )
+    )
+
+    content.append(
+        Paragraph(
+            f"SMP: "
+            f"{timeline['smp_start'].strftime('%d %b %Y')} "
+            f"to "
+            f"{timeline['smp_end'].strftime('%d %b %Y')}",
+            styles["BodyText"]
+        )
+    )
+
+    content.append(
+        Paragraph(
+            f"Unpaid Leave: "
+            f"{timeline['unpaid_start'].strftime('%d %b %Y')} "
+            f"to "
+            f"{timeline['unpaid_end'].strftime('%d %b %Y')}",
+            styles["BodyText"]
+        )
+    )
+
+    content.append(
+        Spacer(1, 12)
+    )
+
+    content.append(
+        Paragraph(
+            "Qualifying Week",
+            styles["Heading2"]
+        )
+    )
+
+    content.append(
+        Paragraph(
+            f"{qualifying['qualifying_start'].strftime('%d %b %Y')} "
+            f"to "
+            f"{qualifying['qualifying_end'].strftime('%d %b %Y')}",
+            styles["BodyText"]
+        )
+    )
+
+    doc.build(content)
+
+    pdf = buffer.getvalue()
+
+    buffer.close()
+
+    return pdf
+
 if calculate:
 
     try:
@@ -218,6 +402,17 @@ if calculate:
         employment_start_date,
         due_date,
         intends_to_return
+    )
+    pdf_data = generate_pdf_report(
+        employment_start_date,
+        due_date,
+        leave_start,
+        return_date,
+        results,
+        timeline,
+        qualifying,
+        oxford_eligible,
+        smp_eligible
     )
 
     st.divider()
@@ -376,3 +571,78 @@ if calculate:
                 )
 
     st.divider()
+
+    st.subheader("Maternity Leave Calendar")
+
+    st.markdown(
+    """
+🟩 Full Pay &nbsp;&nbsp;&nbsp;
+🟧 SMP &nbsp;&nbsp;&nbsp;
+🟥 Unpaid Leave
+""",
+    unsafe_allow_html=True
+)
+
+    start_year = leave_start.year
+    start_month = leave_start.month
+
+    months = []
+
+    for i in range(12):
+
+        month = start_month + i
+        year = start_year
+
+        while month > 12:
+            month -= 12
+            year += 1
+
+        months.append(
+            (year, month)
+        )
+
+    for row in range(4):
+
+        cols = st.columns(3)
+
+        for col in range(3):
+
+            idx = row * 3 + col
+
+            if idx >= len(months):
+                continue
+
+            year, month = months[idx]
+
+            with cols[col]:
+
+                st.markdown(
+                    render_month(
+                        year,
+                        month,
+                        timeline
+                    ),
+                    unsafe_allow_html=True
+                )
+
+    st.divider()
+
+    pdf_data = generate_pdf_report(
+        employment_start_date,
+        due_date,
+        leave_start,
+        return_date,
+        results,
+        timeline,
+        qualifying,
+        oxford_eligible,
+        smp_eligible
+    )
+
+    st.download_button(
+        label="📄 Download PDF Report",
+        data=pdf_data,
+        file_name="Oxford_Maternity_Report.pdf",
+        mime="application/pdf",
+        use_container_width=True
+    )
