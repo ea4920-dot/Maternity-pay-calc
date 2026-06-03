@@ -538,7 +538,7 @@ if calculate:
 
     months = []
 
-    for i in range(12):
+    for i in range(13):
 
         month = start_month + i
         year = start_year
@@ -551,13 +551,13 @@ if calculate:
             (year, month)
         )
 
-    for row in range(4):
+    for row in range(5):
 
-        cols = st.columns(3)
+        cols = st.columns(4)
 
-        for col in range(3):
+        for col in range(4):
 
-            idx = row * 3 + col
+            idx = row * 4 + col
 
             if idx >= len(months):
                 continue
