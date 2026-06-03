@@ -156,14 +156,14 @@ with st.expander("Employee Details", expanded=True):
     step=0.5
 )
 
-current_leave_balance = st.number_input(
+    current_leave_balance = st.number_input(
     "Current Leave Balance",
     min_value=0.0,
     value=0.0,
     step=0.5
 )
 
-leave_unit = st.selectbox(
+    leave_unit = st.selectbox(
     "Leave Balance Unit",
     [
         "Days",
@@ -171,31 +171,31 @@ leave_unit = st.selectbox(
     ]
 )
 
-hours_per_day = st.number_input(
+    hours_per_day = st.number_input(
     "Hours Per Day",
     min_value=1.0,
     value=7.4,
     step=0.1
 )
 
-employment_start_text = st.date_input(
+    employment_start_text = st.date_input(
         "Employment Start Date",
     )
 
-due_date_text = st.date_input(
+    due_date_text = st.date_input(
         "Expected Due Date",
     )
 
-leave_start_text = st.date_input(
+    leave_start_text = st.date_input(
         "Maternity Leave Start Date",
     )
-
-pdf_filename = st.text_input(
+  
+    pdf_filename = st.text_input(
     "Employee Name for PDF",
     value=""
 )
 
-intends_to_return = st.checkbox(
+    intends_to_return = st.checkbox(
         "I intend to return to work",
         value=True
     )
