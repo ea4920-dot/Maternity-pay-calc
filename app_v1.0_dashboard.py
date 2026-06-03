@@ -164,6 +164,11 @@ with st.expander("Employee Details", expanded=True):
         value="11/06/2026"
     )
 
+    pdf_filename = st.text_input(
+    "Employee Name for PDF",
+    value=""
+)
+
     intends_to_return = st.checkbox(
         "I intend to return to work",
         value=True
@@ -572,61 +577,6 @@ if calculate:
 
     st.divider()
 
-    st.subheader("Maternity Leave Calendar")
-
-    st.markdown(
-    """
-🟩 Full Pay &nbsp;&nbsp;&nbsp;
-🟧 SMP &nbsp;&nbsp;&nbsp;
-🟥 Unpaid Leave
-""",
-    unsafe_allow_html=True
-)
-
-    start_year = leave_start.year
-    start_month = leave_start.month
-
-    months = []
-
-    for i in range(12):
-
-        month = start_month + i
-        year = start_year
-
-        while month > 12:
-            month -= 12
-            year += 1
-
-        months.append(
-            (year, month)
-        )
-
-    for row in range(4):
-
-        cols = st.columns(3)
-
-        for col in range(3):
-
-            idx = row * 3 + col
-
-            if idx >= len(months):
-                continue
-
-            year, month = months[idx]
-
-            with cols[col]:
-
-                st.markdown(
-                    render_month(
-                        year,
-                        month,
-                        timeline
-                    ),
-                    unsafe_allow_html=True
-                )
-
-    st.divider()
-
     pdf_data = generate_pdf_report(
         employment_start_date,
         due_date,
@@ -639,10 +589,22 @@ if calculate:
         smp_eligible
     )
 
+    if pdf_filename:
+
+        filename = (
+            f"{pdf_filename}_Maternity_Report.pdf"
+        )
+
+    else:
+
+        filename = (
+            "Oxford_Maternity_Report.pdf"
+        )
+
     st.download_button(
         label="📄 Download PDF Report",
         data=pdf_data,
-        file_name="Oxford_Maternity_Report.pdf",
+        file_name=filename,
         mime="application/pdf",
         use_container_width=True
     )
