@@ -1,4 +1,6 @@
 import streamlit as st
+import pandas as pd
+import plotly.express as px
 from datetime import datetime
 
 from calculations import (
@@ -6,11 +8,12 @@ from calculations import (
     calculate_return_date,
     calculate_qualifying_week,
     qualifies_for_smp,
-    qualifies_for_oxford_scheme
+    qualifies_for_oxford_scheme,
+    calculate_maternity_timeline
 )
 
 st.set_page_config(
-    page_title="Oxford Maternity Pay Calculator",
+    page_title="Oxford University Maternity Pay Calculator",
     layout="wide"
 )
 
@@ -81,9 +84,11 @@ try:
     ).date()
 
 except ValueError:
+
     st.error(
         "Please enter all dates as DD/MM/YYYY"
     )
+
     st.stop()
 
 if st.button("Calculate"):
@@ -101,6 +106,10 @@ if st.button("Calculate"):
         leave_start
     )
 
+    timeline = calculate_maternity_timeline(
+        leave_start
+    )
+
     smp_eligible = qualifies_for_smp(
         employment_start_date,
         due_date
@@ -112,51 +121,107 @@ if st.button("Calculate"):
         intends_to_return
     )
 
-    st.subheader("Eligibility Assessment")
+    st.subheader("Maternity Leave Schedule")
 
-    st.write(
-        f"Oxford Enhanced Scheme: {'✓ Eligible' if oxford_eligible else '✗ Not Eligible'}"
+    timeline_data = pd.DataFrame([
+        {
+            "Period": "Full Pay",
+            "Start": timeline["full_pay_start"],
+            "Finish": timeline["full_pay_end"]
+        },
+        {
+            "Period": "SMP",
+            "Start": timeline["smp_start"],
+            "Finish": timeline["smp_end"]
+        },
+        {
+            "Period": "Unpaid Leave",
+            "Start": timeline["unpaid_start"],
+            "Finish": timeline["unpaid_end"]
+        }
+    ])
+
+    fig = px.timeline(
+        timeline_data,
+        x_start="Start",
+        x_end="Finish",
+        y="Period",
+        color="Period",
+        color_discrete_map={
+            "Full Pay": "#66BB6A",
+            "SMP": "#FFA726",
+            "Unpaid Leave": "#EF5350"
+        }
     )
 
-    st.write(
-        f"SMP Eligibility: {'✓ Eligible' if smp_eligible else '✗ Not Eligible'}"
+    fig.update_yaxes(
+        autorange="reversed"
     )
+
+    fig.update_layout(
+        height=400,
+        xaxis_title="Date",
+        yaxis_title="",
+        showlegend=True
+    )
+
+    st.plotly_chart(fig)
 
     col1, col2 = st.columns(2)
 
     with col1:
+
+        st.subheader("Eligibility")
+
+        st.write(
+            f"Oxford Enhanced Scheme: {'✓ Eligible' if oxford_eligible else '✗ Not Eligible'}"
+        )
+
+        st.write(
+            f"SMP Eligibility: {'✓ Eligible' if smp_eligible else '✗ Not Eligible'}"
+        )
+
+        st.subheader("Key Dates")
+
+        st.write(
+            f"Employment Start Date: {employment_start_date.strftime('%d %B %Y')}"
+        )
+
+        st.write(
+            f"Expected Due Date: {due_date.strftime('%d %B %Y')}"
+        )
+
+        st.write(
+            f"Maternity Leave Start Date: {leave_start.strftime('%d %B %Y')}"
+        )
+
+        st.write(
+            f"Expected Return Date: {return_date.strftime('%d %B %Y')}"
+        )
+
+    with col2:
+
+        st.subheader("Pay Summary")
+
         st.metric(
             "Weekly Salary",
             f"£{results['weekly_salary']:,.2f}"
         )
 
-    with col2:
         st.metric(
             "Estimated Total Maternity Pay",
             f"£{results['total_pay']:,.2f}"
         )
 
-    st.subheader("Important Dates")
+        st.subheader("Payment Breakdown")
 
-    st.write(
-        f"Employment Start Date: "
-        f"{employment_start_date.strftime('%d %B %Y')}"
-    )
+        st.write(
+            f"26 Weeks Full Pay: £{results['full_pay_total']:,.2f}"
+        )
 
-    st.write(
-        f"Expected Due Date: "
-        f"{due_date.strftime('%d %B %Y')}"
-    )
-
-    st.write(
-        f"Maternity Leave Start Date: "
-        f"{leave_start.strftime('%d %B %Y')}"
-    )
-
-    st.write(
-        f"Expected Return Date: "
-        f"{return_date.strftime('%d %B %Y')}"
-    )
+        st.write(
+            f"13 Weeks SMP: £{results['smp_total']:,.2f}"
+        )
 
     st.subheader("Qualifying Week")
 
@@ -166,17 +231,8 @@ if st.button("Calculate"):
         f"{qualifying['qualifying_end'].strftime('%d %B %Y')}"
     )
 
-    st.subheader("Payment Breakdown")
+st.divider()
 
-    st.write(
-        f"26 Weeks Full Pay: £{results['full_pay_total']:,.2f}"
-    )
-
-    st.write(
-        f"13 Weeks SMP: £{results['smp_total']:,.2f}"
-    )
-    st.divider()
-
-    st.caption(
-    "Version 0.1 | Released June 2026"
+st.caption(
+    "Version 0.2 | Released June 2026"
 )

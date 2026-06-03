@@ -70,3 +70,26 @@ def qualifies_for_oxford_scheme(
         return False
 
     return True
+
+def calculate_maternity_timeline(leave_start):
+
+    full_pay_end = leave_start + timedelta(weeks=26) - timedelta(days=1)
+
+    smp_start = full_pay_end + timedelta(days=1)
+    smp_end = smp_start + timedelta(weeks=13) - timedelta(days=1)
+
+    unpaid_start = smp_end + timedelta(days=1)
+
+    return_date = leave_start + timedelta(weeks=52)
+
+    unpaid_end = return_date - timedelta(days=1)
+
+    return {
+        "full_pay_start": leave_start,
+        "full_pay_end": full_pay_end,
+        "smp_start": smp_start,
+        "smp_end": smp_end,
+        "unpaid_start": unpaid_start,
+        "unpaid_end": unpaid_end,
+        "return_date": return_date
+    }
